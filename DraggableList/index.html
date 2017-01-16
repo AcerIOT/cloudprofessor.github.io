@@ -38,14 +38,15 @@ function handleDragStart (event){
     console.log ('handleDragStart() ' + event.target.id);
 
     // make a copy of the list
-    var listELems = document.querySelectorAll (dragClass);
-    console.log ("handleDragStart() - item count: " + listELems.length);
+    var listElems = document.querySelectorAll (dragClass);
+    console.log ("handleDragStart() - item count: " + listElems.length);
 
     dragOriginalElemsHTML = [];
-    for (var i=0; i<listELems.length; i++) {
-        dragOriginalElemsHTML.push ({"idx":i, "innerHTML":listELems[i].innerHTML});
-        listELems[i].idx = i;
+    for (var i=0; i<listElems.length; i++) {
+        listElems[i].idx = i;
+        dragOriginalElemsHTML.push ({"elem":listElems[i], "idx":i, "innerHTML":listElems[i].innerHTML});
     }
+
     // store a ref. on the dragged elem
     dragElem.idx = event.target.idx;
     dragElem.innerHTML = event.target.innerHTML;
@@ -81,7 +82,7 @@ function handleDragEnter (event){
     var dragEneterElemIdx = 0;
     var newListElems = [];
     for (var i=0; i<dragOriginalElemsHTML.length; i++) {
-        newListElems.push ({"idx":dragOriginalElemsHTML.idx, "id":dragOriginalElemsHTML[i].id, "innerHTML":dragOriginalElemsHTML[i].innerHTML});
+        newListElems.push ({"elem":dragOriginalElemsHTML.elem, "idx":dragOriginalElemsHTML[i].idx, "innerHTML":dragOriginalElemsHTML[i].innerHTML});
 
         if (dragOriginalElemsHTML[i].idx == dragElem.idx) {
             dragElemIdx = i;
@@ -137,14 +138,77 @@ function handleDragOver (event){
 }
 
 
-var lastLouchElem = null;
+//----- touch handlers
+var startTouchElem= {};
+var curTouchElem = {};
+
+function findListElemByPageXY (listElems, pageX, pageY) {
+    for (var i=0; i<listElems.length; i++){
+        var elem = listElems[i].elem;
+        //var elemBoundRect = elem.getBoundingClientRect();
+
+        console.log ('elem['+i+'].id: ' + elem.id);
+        console.log ('elem['+i+'].idx: ' + elem.idx);
+        console.log ('elem['+i+']: offsetLeft-' + elem.offsetLeft + ', offsetTop-' + elem.offsetTop);
+
+        // finds elem.top & elem.left in the page
+        var top    = elem.offsetTop;
+        var left   = elem.offsetLeft;
+        var right  = left + elem.offsetWidth;
+        var bottom = top  + elem.offsetHeight;
+
+        while(elem.offsetParent) {
+            elem  = elem.offsetParent;
+
+            top  += elem.offsetTop;
+            left += elem.offsetLeft;
+
+            bottom += elem.offsetTop;
+            right  += elem.offsetLeft;
+        }
+
+        console.log ('boundRect['+i+']: l-' + left + ', r-' + right + ', t-' + top + ', b-' + bottom);
+
+        if ( (pageX >= left && pageX <= right) &&
+             (pageY >= top  && pageY <= bottom)) {
+            return listElems[i];
+        }
+    }
+
+    return null;
+}
 
 function handleTouchStart (event){
     console.log ("------------------------------");
     console.log ('handleTouchStart(): ' + event.target.id);
 
-    lastLouchElem = null;
-    handleDragStart (event);
+    curTouchElem = null;
+    //handleDragStart (event);
+
+    // make a copy of the list
+    var listElems = document.querySelectorAll (dragClass);
+
+    dragOriginalElemsHTML = [];
+    for (var i=0; i<listElems.length; i++) {
+        listElems[i].idx = i;
+        dragOriginalElemsHTML.push ({"elem":listElems[i], "idx":i, "innerHTML":listElems[i].innerHTML});
+    }
+    
+    // only supports 1 touch point
+    if (event.targetTouches.length == 1) {
+        var touch = event.targetTouches[0];
+
+        var touchElem = findListElemByPageXY(dragOriginalElemsHTML, touch.pageX, touch.pageY);
+
+        if (touchElem != null) {
+            startTouchElem.elem = touchElem.elem;
+            startTouchElem.idx = touchElem.idx;
+            startTouchElem.innerHTML = event.target.innerHTML;
+
+            console.log ('handleTouchStart(): startTouchElem: ' + startTouchElem);
+        }
+    }
+
     // prevent default to allow drop
     event.preventDefault();
 }
@@ -155,7 +219,7 @@ function handleTouchEnd (event){
 
     handleDragEnd(event);
 
-    lastLouchElem = null;
+    curTouchElem = null;
 
     // prevent default to allow drop
     event.preventDefault();
@@ -165,7 +229,7 @@ function handleTouchCancel (event){
     console.log ("------------------------------");
     console.log ('handleTouchCancel(): ' + event.target.idx);
 
-    lastLouchElem = null;
+    curTouchElem = null;
 
     // prevent default to allow drop
     event.preventDefault();
@@ -175,23 +239,64 @@ function handleTouchMove (event){
     console.log ("------------------------------");
     console.log ('handleTouchMove(): ' + event.target.idx);
 
-    console.log ('handleTouchMove(): x:' + event.pageX + "       y:" + event.pageY);
     // only supports 1 touch point
-    /*
     if (event.targetTouches.length == 1) {
         var touch = event.targetTouches[0];
+        console.log ('handleTouchMove(): x:' + touch.pageX + "       y:" + touch.pageY);
+        console.log ('handleTouchMove(): clientLeft:' + this.getBoundingClientRect().left + "       clientTop:" + this.getBoundingClientRect().top);
 
+        var touchElem = findListElemByPageXY(dragOriginalElemsHTML, touch.pageX, touch.pageY);
+
+        if (touchElem != null && touchElem != startTouchElem) {
+            handleTouchEnter (event, touchElem);
+            curTouchElem = touchElem;
+        }
         // Place element where the finger is
-        obj.style.left = touch.pageX + 'px';
-        obj.style.top = touch.pageY + 'px';
+        //this.style.left = touch.pageX + 'px';
+        //this.style.top = touch.pageY + 'px';
     }
-    */
 
     // prevent default to allow drop
     event.preventDefault();
 }
 
+function handleTouchEnter (event, curTouchElem){
+    console.log ("------------------------------");
+    console.log ('handleTouchEnter()');
 
+    var startTouchElemIdx = 0;
+    var touchEneterElemIdx = 0;
+    var newListElems = [];
+    for (var i=0; i<dragOriginalElemsHTML.length; i++) {
+        newListElems.push ({"idx":dragOriginalElemsHTML.idx, "id":dragOriginalElemsHTML[i].id, "innerHTML":dragOriginalElemsHTML[i].innerHTML});
+
+        if (dragOriginalElemsHTML[i].idx == startTouchElem.idx) {
+            startTouchElemIdx = i;
+        }
+
+        if (dragOriginalElemsHTML[i].idx == curTouchElem.idx) {
+            touchEneterElemIdx = i;
+        }
+    }
+
+    // remove drag item from the new list
+    newListElems.splice (startTouchElemIdx, 1);
+
+    // adds back the drag item to the new list in current drag position
+    newListElems.splice (touchEneterElemIdx, 0, startTouchElem);
+
+    // output to html
+    var listElems = document.querySelectorAll (dragClass);
+    for (var i=0; i<listElems.length; i++) {
+
+        //listElems[i].id = newListElems[i].id;
+        listElems[i].innerHTML = newListElems[i].innerHTML;
+
+        if (listElems[i].idx == this.idx) {
+            listElems[i].classList.add ('hover_placeholder');
+        }
+    }
+}
 
 // set all items
 function initDraggableList (classname) {
