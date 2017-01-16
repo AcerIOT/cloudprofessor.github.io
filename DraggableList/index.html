@@ -35,7 +35,7 @@ var dragElem = {};
 
 function handleDragStart (event){
     console.log ("------------------------------");
-    console.log ('handleDragStart() ' + event.target.idx);
+    console.log ('handleDragStart() ' + event.target.id);
 
     // make a copy of the list
     var listELems = document.querySelectorAll (dragClass);
@@ -136,10 +136,15 @@ function handleDragOver (event){
     event.preventDefault();
 }
 
+
+var lastLouchElem = null;
+
 function handleTouchStart (event){
     console.log ("------------------------------");
-    console.log ('handleTouchStart(): ' + event.target.idx);
+    console.log ('handleTouchStart(): ' + event.target.id);
 
+    lastLouchElem = null;
+    handleDragStart (event);
     // prevent default to allow drop
     event.preventDefault();
 }
@@ -147,6 +152,10 @@ function handleTouchStart (event){
 function handleTouchEnd (event){
     console.log ("------------------------------");
     console.log ('handleTouchEnd(): ' + event.target.idx);
+
+    handleDragEnd(event);
+
+    lastLouchElem = null;
 
     // prevent default to allow drop
     event.preventDefault();
@@ -156,6 +165,8 @@ function handleTouchCancel (event){
     console.log ("------------------------------");
     console.log ('handleTouchCancel(): ' + event.target.idx);
 
+    lastLouchElem = null;
+
     // prevent default to allow drop
     event.preventDefault();
 }
@@ -163,6 +174,17 @@ function handleTouchCancel (event){
 function handleTouchMove (event){
     console.log ("------------------------------");
     console.log ('handleTouchMove(): ' + event.target.idx);
+
+    // only supports 1 touch point
+    /*
+    if (event.targetTouches.length == 1) {
+        var touch = event.targetTouches[0];
+
+        // Place element where the finger is
+        obj.style.left = touch.pageX + 'px';
+        obj.style.top = touch.pageY + 'px';
+    }
+    */
 
     // prevent default to allow drop
     event.preventDefault();
