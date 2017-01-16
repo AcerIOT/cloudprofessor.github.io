@@ -136,6 +136,38 @@ function handleDragOver (event){
     event.preventDefault();
 }
 
+function handleTouchStart (event){
+    console.log ("------------------------------");
+    console.log ('handleTouchStart(): ' + event.target.idx);
+
+    // prevent default to allow drop
+    event.preventDefault();
+}
+
+function handleTouchEnd (event){
+    console.log ("------------------------------");
+    console.log ('handleTouchEnd(): ' + event.target.idx);
+
+    // prevent default to allow drop
+    event.preventDefault();
+}
+
+function handleTouchCancel (event){
+    console.log ("------------------------------");
+    console.log ('handleTouchCancel(): ' + event.target.idx);
+
+    // prevent default to allow drop
+    event.preventDefault();
+}
+
+function handleTouchMove (event){
+    console.log ("------------------------------");
+    console.log ('handleTouchMove(): ' + event.target.idx);
+
+    // prevent default to allow drop
+    event.preventDefault();
+}
+
 // set all items
 function initDraggableList (classname) {
     var dragElems = document.querySelectorAll (classname);
@@ -147,17 +179,15 @@ function initDraggableList (classname) {
 
         elem.addEventListener("dragstart", handleDragStart, false);
         elem.addEventListener("dragend"  , handleDragEnd, false);
-
         elem.addEventListener("dragenter", handleDragEnter, false);
         elem.addEventListener("dragleave", handleDragLeave, false);
-
         elem.addEventListener("dragover" , handleDragOver, false);
 
         // setup touch events
-        elem.addEventListener("touchstart" , handleDragStart, false);
-        elem.addEventListener("touchend"   , handleDragEnd, false);
-        elem.addEventListener("touchcancel", handleDragEnd, false);
-        elem.addEventListener("touchmove"  , handleDragEnter, false);
+        elem.addEventListener("touchstart" , handleTouchStart, false);
+        elem.addEventListener("touchend"   , handleTouchEnd, false);
+        elem.addEventListener("touchcancel", handleTouchCancel, false);
+        elem.addEventListener("touchmove"  , handleTouchMove, false);
     }
 }
 
