@@ -1,0 +1,47 @@
+* {
+    box-sizing: border-box;
+}
+html {
+    font-family: "Lucida Sans", sans-serif;
+}
+.header {
+    border: 1px;// solid red;
+    padding: 1px;
+}
+
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.handles {
+            margin: auto;
+            padding: 0;
+            width: 310px;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+.handles li {
+    list-style: none;
+    border: 1px solid #CCC;
+    background: #F6F6F6;
+    color: #101010;
+    margin: 5px;
+    padding: 5px;
+    height: 30px;
+}
+
+li.hover_placeholder {
+    border: 1px dashed #CCC;
+    background: none;
+}
+
+.handles span {
+    cursor: move;
+}
+
