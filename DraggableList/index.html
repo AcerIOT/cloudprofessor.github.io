@@ -3,55 +3,126 @@
 <!--2017/01/15 Mark Yang -->
 <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Draggable List with Handles</title>
+<title>CPF Touch/Draggable List</title>
 <head>
     <link rel="stylesheet" href="css/main.css">
 </head>
 
 <body style="font-family:arial;width:100%">
     <section>
-        <h2>Draggable List With Handles</h2>
+        <h2>CPF Touch/Draggable List</h2>
        
-        <ul class="handles list">
-            <li id="item_01" class="dragitem"><span>::</span> Lesson 1 <a href="http://www.google.com">  google.com</a></li>
-            <li id="item_02" class="dragitem"><span>::</span> Lesson 2 </li>
-            <li id="item_03" class="dragitem"><span>::</span> Lesson 3 </li>
-            <li id="item_04" class="dragitem"><span>::</span> Lesson 4 </li>
-            <li id="item_05" class="dragitem"><span>::</span> Lesson 5 </li>
-            <li id="item_06" class="dragitem"><span>::</span> Lesson 6 </li>
-            <li id="item_07" class="dragitem"><span>::</span> Lesson 7 </li>
-            <li id="item_08" class="dragitem"><span>::</span> Lesson 8 </li>
-            <li id="item_09" class="dragitem"><span>::</span> Lesson 9 </li>
-            <li id="item_10" class="dragitem"><span>::</span> Lesson 10 </li>
+        <ul class="handles">
+            <!-- mcky, id is only for debugging purpose -->
+            <li id="item_01" class="dragitem"><span>::</span> Lesson 1 - Smart LED</a></li>
+            <li id="item_02" class="dragitem"><span>::</span> Lesson 2 - Fan</li>
+            <li id="item_03" class="dragitem"><span>::</span> Lesson 3 - Noodle</li>
+            <li id="item_04" class="dragitem"><span>::</span> Lesson 4 - UFO</li>
+            <li id="item_05" class="dragitem"><span>::</span> Lesson 5 - AOP Upload</li>
+            <li id="item_06" class="dragitem"><span>::</span> Lesson 6 - AOP Download</li>
+            <li id="item_07" class="dragitem"><span>::</span> Lesson 7 - Cloud Mood</li>
+            <li id="item_08" class="dragitem"><span>::</span> Lesson 8 - Socket Mode</li>
+            <li id="item_09" class="dragitem"><span>::</span> Lesson 9 - etc...</li>
+            <li id="item_10" class="dragitem"><span>::</span> Lesson 10- etc...</li>
         </ul>
     </section>
 
 
 
 <script>
-var dragClass = ".dragitem";
-var dragOriginalElemsHTML = [];
-var dragElem = {};
+var tapClass        = "dragitem";
+
+var tapOriginalElemsHTML = []; // tap: drag or touch
+var tapStartElem = {};
+
+function tapQuerySelectorAll (className) {
+    return document.querySelectorAll ("." + className);
+}
+
+function tapRemovePlaceholderClass() {
+    // remove hover placeholder class from all elems
+    var listElems = tapQuerySelectorAll (tapClass);
+    for (var i=0; i<listElems.length; i++) {
+        listElems[i].classList.remove ('hover_placeholder');
+    }
+}
+
+
+function tapStart (event) {
+    // make a copy of the list
+    var listElems = tapQuerySelectorAll (tapClass);
+
+    console.log ("tapStart() - item count: " + listElems.length);
+
+    tapOriginalElemsHTML = [];
+    for (var i=0; i<listElems.length; i++) {
+        listElems[i].idx = i;   // add a unique idx that stays the same through out the course of tap-move process
+        tapOriginalElemsHTML.push ({"elem":listElems[i], "idx":i, "innerHTML":listElems[i].innerHTML});
+    }
+
+    // store a ref. on the dragged elem
+    tapStartElem.elem = null;
+    tapStartElem.idx  = event.target.idx;
+    tapStartElem.innerHTML = event.target.innerHTML;
+    console.log ("tapStartElem.idx: " + tapStartElem.idx);
+}
+
+function tapEnd (event) {
+    tapStartElem = {};
+    tapRemovePlaceholderClass()
+}
+
+function tapEnter (event, enterIdx) {
+    var tapElemIdx = 0;
+    var tapEneterElemIdx = 0;
+
+    var newListElems = [];
+    for (var i=0; i<tapOriginalElemsHTML.length; i++) {
+        newListElems.push ({"elem":tapOriginalElemsHTML.elem, "idx":tapOriginalElemsHTML[i].idx, "innerHTML":tapOriginalElemsHTML[i].innerHTML});
+
+        if (tapOriginalElemsHTML[i].idx == tapStartElem.idx) {
+            tapElemIdx = i;
+        }
+
+        if (tapOriginalElemsHTML[i].idx == enterIdx) {
+            tapEneterElemIdx = i;
+        }
+    }
+
+    // remove drag item from the new list
+    newListElems.splice (tapElemIdx, 1);
+
+    // adds back the drag item to the new list in current drag position
+    newListElems.splice (tapEneterElemIdx, 0, tapStartElem);
+
+    // output to html
+    var listElems = tapQuerySelectorAll (tapClass);
+    for (var i=0; i<listElems.length; i++) {
+        //listElems[i].id = newListElems[i].id;
+        listElems[i].innerHTML = newListElems[i].innerHTML;
+
+        if (listElems[i].idx == tapEneterElemIdx) {
+            listElems[i].classList.add ('hover_placeholder');
+        }
+    }
+}
+
+function tapLeave (event, leaveIdx) {
+    tapRemovePlaceholderClass ();
+}
 
 function handleDragStart (event){
     console.log ("------------------------------");
     console.log ('handleDragStart() ' + event.target.id);
+    console.log ('handleDragStart() - elemTagName: ' + event.target.tagName);
 
-    // make a copy of the list
-    var listElems = document.querySelectorAll (dragClass);
-    console.log ("handleDragStart() - item count: " + listElems.length);
-
-    dragOriginalElemsHTML = [];
-    for (var i=0; i<listElems.length; i++) {
-        listElems[i].idx = i;
-        dragOriginalElemsHTML.push ({"elem":listElems[i], "idx":i, "innerHTML":listElems[i].innerHTML});
+    if (event.target.className != tapClass) {
+        // prevent default to allow drop
+        event.preventDefault();
+        return;
     }
 
-    // store a ref. on the dragged elem
-    dragElem.idx = event.target.idx;
-    dragElem.innerHTML = event.target.innerHTML;
-
-    console.log ("dragElem.idx: " + dragElem.idx);
+    tapStart (event);
 
     // make it half transparent
     event.target.style.opacity = .5;
@@ -61,14 +132,8 @@ function handleDragStart (event){
 function handleDragEnd (event){
     console.log ("------------------------------");
     console.log ('handleDragEnd()' + event.target.idx);
-    dragStartElems = {};
-    dragElem = {};
 
-    // remove hover placeholder class from all elems
-    var listElems = document.querySelectorAll (dragClass);
-    for (var i=0; i<listElems.length; i++) {
-        listElems[i].classList.remove ('hover_placeholder');
-    }
+    tapEnd (event);
 
     // reset the transparency
     event.target.style.opacity = "";
@@ -78,39 +143,14 @@ function handleDragEnter (event){
     console.log ("------------------------------");
     console.log ('handleDragEnter()' + event.target.idx);
 
-    var dragElemIdx = 0;
-    var dragEneterElemIdx = 0;
-    var newListElems = [];
-    for (var i=0; i<dragOriginalElemsHTML.length; i++) {
-        newListElems.push ({"elem":dragOriginalElemsHTML.elem, "idx":dragOriginalElemsHTML[i].idx, "innerHTML":dragOriginalElemsHTML[i].innerHTML});
-
-        if (dragOriginalElemsHTML[i].idx == dragElem.idx) {
-            dragElemIdx = i;
-        }
-
-        if (dragOriginalElemsHTML[i].idx == this.idx) {
-            dragEneterElemIdx = i;
-        }
+    if (event.target.className != tapClass) {
+        // prevent default to allow drop
+        event.preventDefault();
+        return;
     }
 
-    // remove drag item from the new list
-    newListElems.splice (dragElemIdx, 1);
+    tapEnter (event, event.target.idx);
 
-    // adds back the drag item to the new list in current drag position
-    newListElems.splice (dragEneterElemIdx, 0, dragElem);
-
-    // output to html
-    var listElems = document.querySelectorAll (dragClass);
-    for (var i=0; i<listElems.length; i++) {
-
-        //listElems[i].id = newListElems[i].id;
-        listElems[i].innerHTML = newListElems[i].innerHTML;
-
-        if (listElems[i].idx == this.idx) {
-            listElems[i].classList.add ('hover_placeholder');
-        }
-    }
-    
     // prevent default to allow drop
     event.preventDefault();
     
@@ -120,7 +160,7 @@ function handleDragLeave (event){
     console.log ("------------------------------");
     console.log ('handleDragLeave(): ' + event.target.idx);
 
-    this.classList.remove ('hover_placeholder');
+    tapLeave (event);
 
     // prevent default to allow drop
     event.preventDefault();
@@ -129,7 +169,7 @@ function handleDragLeave (event){
 function handleDragOver (event){
     //console.log ("------------------------------");
     //console.log ('handleDragOver()');
-    if (dragElem != event.target) {
+    if (tapStartElem != event.target) {
         console.log ('handleDragOver()' + event.target.idx);
     }
 
@@ -147,9 +187,9 @@ function findListElemByPageXY (listElems, pageX, pageY) {
         var elem = listElems[i].elem;
         //var elemBoundRect = elem.getBoundingClientRect();
 
-        console.log ('elem['+i+'].id: ' + elem.id);
-        console.log ('elem['+i+'].idx: ' + elem.idx);
-        console.log ('elem['+i+']: offsetLeft-' + elem.offsetLeft + ', offsetTop-' + elem.offsetTop);
+        //console.log ('elem['+i+'].id: ' + elem.id);
+        //console.log ('elem['+i+'].idx: ' + elem.idx);
+        //console.log ('elem['+i+']: offsetLeft-' + elem.offsetLeft + ', offsetTop-' + elem.offsetTop);
 
         // finds elem.top & elem.left in the page
         var top    = elem.offsetTop;
@@ -167,7 +207,7 @@ function findListElemByPageXY (listElems, pageX, pageY) {
             right  += elem.offsetLeft;
         }
 
-        console.log ('boundRect['+i+']: l-' + left + ', r-' + right + ', t-' + top + ', b-' + bottom);
+        //console.log ('boundRect['+i+']: l-' + left + ', r-' + right + ', t-' + top + ', b-' + bottom);
 
         if ( (pageX >= left && pageX <= right) &&
              (pageY >= top  && pageY <= bottom)) {
@@ -182,57 +222,32 @@ function handleTouchStart (event){
     console.log ("------------------------------");
     console.log ('handleTouchStart(): ' + event.target.id);
 
-    curTouchElem = null;
-    //handleDragStart (event);
+    tapStart (event);
 
-    // make a copy of the list
-    var listElems = document.querySelectorAll (dragClass);
-
-    dragOriginalElemsHTML = [];
-    for (var i=0; i<listElems.length; i++) {
-        listElems[i].idx = i;
-        dragOriginalElemsHTML.push ({"elem":listElems[i], "idx":i, "innerHTML":listElems[i].innerHTML});
-    }
-    
     // only supports 1 touch point
     if (event.targetTouches.length == 1) {
         var touch = event.targetTouches[0];
-
-        var touchElem = findListElemByPageXY(dragOriginalElemsHTML, touch.pageX, touch.pageY);
-
+        var touchElem = findListElemByPageXY(tapOriginalElemsHTML, touch.pageX, touch.pageY);
         if (touchElem != null) {
+            console.log ('touch elem found: ' + touchElem.tagName);
             startTouchElem.elem = touchElem.elem;
             startTouchElem.idx = touchElem.idx;
             startTouchElem.innerHTML = event.target.innerHTML;
-
             console.log ('handleTouchStart(): startTouchElem: ' + startTouchElem);
         }
     }
-
-    // prevent default to allow drop
-    event.preventDefault();
 }
 
 function handleTouchEnd (event){
     console.log ("------------------------------");
     console.log ('handleTouchEnd(): ' + event.target.idx);
 
-    handleDragEnd(event);
-
-    curTouchElem = null;
-
-    // prevent default to allow drop
-    event.preventDefault();
+    tapEnd(event);
 }
 
 function handleTouchCancel (event){
     console.log ("------------------------------");
     console.log ('handleTouchCancel(): ' + event.target.idx);
-
-    curTouchElem = null;
-
-    // prevent default to allow drop
-    event.preventDefault();
 }
 
 function handleTouchMove (event){
@@ -245,64 +260,42 @@ function handleTouchMove (event){
         console.log ('handleTouchMove(): x:' + touch.pageX + "       y:" + touch.pageY);
         console.log ('handleTouchMove(): clientLeft:' + this.getBoundingClientRect().left + "       clientTop:" + this.getBoundingClientRect().top);
 
-        var touchElem = findListElemByPageXY(dragOriginalElemsHTML, touch.pageX, touch.pageY);
+        var touchElem = findListElemByPageXY(tapOriginalElemsHTML, touch.pageX, touch.pageY);
 
         if (touchElem != null && touchElem != startTouchElem) {
+            handleTouchLeave (event, curTouchElem);
             handleTouchEnter (event, touchElem);
             curTouchElem = touchElem;
         }
-        // Place element where the finger is
-        //this.style.left = touch.pageX + 'px';
-        //this.style.top = touch.pageY + 'px';
     }
 
     // prevent default to allow drop
     event.preventDefault();
 }
 
-function handleTouchEnter (event, curTouchElem){
+function handleTouchEnter (event, enterElem){
     console.log ("------------------------------");
-    console.log ('handleTouchEnter()');
+    console.log ('handleTouchEnter() - curTouchElem.idx: ' + curTouchElem.idx);
 
-    var startTouchElemIdx = 0;
-    var touchEneterElemIdx = 0;
-    var newListElems = [];
-    for (var i=0; i<dragOriginalElemsHTML.length; i++) {
-        newListElems.push ({"idx":dragOriginalElemsHTML.idx, "id":dragOriginalElemsHTML[i].id, "innerHTML":dragOriginalElemsHTML[i].innerHTML});
+    tapEnter (event, enterElem.idx);
+}
 
-        if (dragOriginalElemsHTML[i].idx == startTouchElem.idx) {
-            startTouchElemIdx = i;
-        }
-
-        if (dragOriginalElemsHTML[i].idx == curTouchElem.idx) {
-            touchEneterElemIdx = i;
-        }
-    }
-
-    // remove drag item from the new list
-    newListElems.splice (startTouchElemIdx, 1);
-
-    // adds back the drag item to the new list in current drag position
-    newListElems.splice (touchEneterElemIdx, 0, startTouchElem);
-
-    // output to html
-    var listElems = document.querySelectorAll (dragClass);
-    for (var i=0; i<listElems.length; i++) {
-
-        //listElems[i].id = newListElems[i].id;
-        listElems[i].innerHTML = newListElems[i].innerHTML;
-
-        if (listElems[i].idx == this.idx) {
-            listElems[i].classList.add ('hover_placeholder');
-        }
-    }
+function handleTouchLeave (event, leaveElem) {
+    tapLeave (event, leaveElem);
 }
 
 // set all items
-function initDraggableList (classname) {
-    var dragElems = document.querySelectorAll (classname);
-    for (var i = 0; i < dragElems.length; i++) {
-        elem = dragElems[i];
+function initTapableList (tapClass) {
+    var queryClass = tapClass;
+    /*
+    if (handleClass != null) {
+        queryClass = handleClass;
+    }
+    */
+
+    var tapElems = tapQuerySelectorAll (queryClass);
+    for (var i = 0; i < tapElems.length; i++) {
+        elem = tapElems[i];
 
         // setup drag-drop events
         elem.setAttribute ("draggable", true);
@@ -321,7 +314,7 @@ function initDraggableList (classname) {
     }
 }
 
-initDraggableList (dragClass);
+initTapableList (tapClass);
 
 </script>
 
